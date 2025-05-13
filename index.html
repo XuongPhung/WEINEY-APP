@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Finance Tracker with Transfer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Finance Tracker</h1>
+
+  <div class="section">
+    <strong>Select Action:</strong>
+    <div class="button-group">
+      <button class="income-btn" onclick="setType('Income')">Income</button>
+      <button class="expense-btn" onclick="setType('Expense')">Expense</button>
+      <button class="transfer-btn" onclick="setType('Transfer')">Transfer</button>
+    </div>
+  </div>
+
+  <div class="section" id="fromSection">
+    <strong>From Account:</strong>
+    <div class="button-group" id="fromAccounts"></div>
+    <div class="button-group" id="fromSubAccounts"></div>
+  </div>
+
+  <div class="section" id="toSection" style="display:none;">
+    <strong>To Account:</strong>
+    <div class="button-group" id="toAccounts"></div>
+    <div class="button-group" id="toSubAccounts"></div>
+  </div>
+
+  <input id="amount" type="number" placeholder="Amount" />
+  <input id="note" placeholder="Note (optional)" />
+  <button onclick="submitTransaction()">Submit</button>
+  <p id="status"></p>
+
+  <h2>Account Totals</h2>
+  <div class="grid" id="accountTotalsGrid"></div>
+
+  <button onclick="toggleHistory()">Show/Hide Transactions</button>
+
+  <h2>Transactions</h2>
+  <ul id="transactionList"></ul>
+
+  <h2>Account Overview</h2>
+  <div class="grid" id="accountGrid"></div>
+
+  <script>
+    const accounts = {
+      "daily": ["cash", "comm"],
+      "bank": ["mobile", "opal", "wifi", "tvb", "g-one", "gym", "savings", "che", "spare"],
+      "saving account": ["savings", "leisure", "mom", "rent", "share"]
+    };
+
+    let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+    let selectedType = 'Income';
+    let fromAccount = "", fromSub = "", toAccount = "", toSub = "";
+
+    function setType(type) {
+      selectedType = type;
+      document.getElementById('toSection').style.display = (type === 'Transfer') ? 'block' : 'none';
+      document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active-btn'));
+      document.querySelectorAll('.button-group button').forEach(btn => {
+        if (btn.innerText === type) btn.classList.add('active-btn');
+      });
+      fromAccount = fromSub = toAccount = toSub = "";
+      renderAccountButtons("from");
+      if (type === 'Transfer') renderAccountButtons("to");
+    }
+
+    function renderAccountButtons(role) {
+      const accContainer = document.getElementById(role + "Accounts");
+      accContainer.innerHTML = '';
+      Object.keys(accounts).forEach(acc => {
+        const btn = document.createElement('button');
+        btn.innerText = acc;
+        btn.className = 'account-btn';
+        btn.onclick = () => {
+          document.querySelectorAll(`#${role}Accounts .account-btn`).forEach(b => b.classList.remove('active-btn'));
+          btn.classList.add('active-btn');
+          if (role === "from") {
+            fromAccount = acc; fromSub = "";
+          } else {
+            toAccount = acc; toSub = "";
+          }
+          renderSubAccountButtons(role, acc);
+        };
+        accContainer.appendChild(btn);
+      });
+    }
+
+    function renderSubAccountButtons(role, account) {
+      const subContainer = document.getElementById(role + "SubAccounts");
+      subContainer.innerHTML = '';
+      accounts[account].forEach(sub => {
+        const btn = document.createElement('button');
+        btn.innerText = sub;
+        btn.className = 'subaccount-btn';
+        btn.onclick = () => {
+          document.querySelectorAll(`#${role}SubAccounts .subaccount-btn`).forEach(b => b.classList.remove('active-btn'));
+          btn.classList.add('active-btn');
+          if (role === "from") fromSub = sub;
+          else toSub = sub;
+        };
+        subContainer.appendChild(btn);
+      });
+    }
+
+    function submitTransaction() {
+      const amt = parseFloat(document.getElementById('amount').value);
+      const note = document.getElementById('note').value;
+
+      if (isNaN(amt) || amt <= 0 || !fromAccount || !fromSub || (selectedType === "Transfer" && (!toAccount || !toSub))) {
+        alert("Please complete the form.");
+        return;
+      }
+
+      if (selectedType === 'Transfer') {
+        transactions.push({
+          date: new Date().toLocaleString(),
+          type: "Transfer Out",
+          account: fromAccount,
+          subAccount: fromSub,
+          amount: -amt,
+          note: `Transfer to ${toAccount}/${toSub} | ${note}`
+        });
+        transactions.push({
+          date: new Date().toLocaleString(),
+          type: "Transfer In",
+          account: toAccount,
+          subAccount: toSub,
+          amount: amt,
+          note: `Transfer from ${fromAccount}/${fromSub} | ${note}`
+        });
+      } else {
+        transactions.push({
+          date: new Date().toLocaleString(),
+          type: selectedType,
+          account: fromAccount,
+          subAccount: fromSub,
+          amount: selectedType === 'Expense' ? -amt : amt,
+          note
+        });
+      }
+
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      document.getElementById('status').innerText = '✅ Transaction saved!';
+      displayTransactions();
+      displayOverview();
+    }
+
+    function displayTransactions() {
+      const list = document.getElementById('transactionList');
+      list.innerHTML = '';
+      transactions.forEach(t => {
+        list.innerHTML += `<li>${t.date} | ${t.type} | ${t.account}/${t.subAccount} | $${t.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} | ${t.note}</li>`;
+      });
+    }
+
+    function displayOverview() {
+      const grid = document.getElementById('accountGrid');
+      const totalGrid = document.getElementById('accountTotalsGrid');
+      grid.innerHTML = '';
+      totalGrid.innerHTML = '';
+
+      const grouped = {}, totals = {};
+      transactions.forEach(t => {
+        grouped[t.account] = grouped[t.account] || {};
+        grouped[t.account][t.subAccount] = (grouped[t.account][t.subAccount] || 0) + t.amount;
+        totals[t.account] = (totals[t.account] || 0) + t.amount;
+      });
+
+      for (let acc in totals) {
+        const box = document.createElement('div');
+        box.className = 'card';
+        box.innerHTML = `<h3>${acc}</h3><p><strong>Total:</strong> $${totals[acc].toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>`;
+        totalGrid.appendChild(box);
+      }
+
+      for (let acc in grouped) {
+        let total = 0;
+        let html = `<h3>${acc}</h3><ul>`;
+        for (let sub in grouped[acc]) {
+          html += `<li><span>${sub}</span><span>$${grouped[acc][sub].toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></li>`;
+          total += grouped[acc][sub];
+        }
+        html += `<li><strong>Total:</strong><span>$${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></li></ul>`;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = html;
+        grid.appendChild(card);
+      }
+    }
+
+    function toggleHistory() {
+      const list = document.getElementById('transactionList');
+      list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    }
+
+    setType('Income');
+    displayTransactions();
+    displayOverview();
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+/* style.css */
+body {
+  font-family: sans-serif;
+  margin: 2rem;
+  background: #f8f8f8;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.button-group button {
+  padding: 8px 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.button-group button:hover {
+  opacity: 0.9;
+}
+
+.income-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.expense-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.transfer-btn {
+  background-color: #FFEB3B;
+  color: #333;
+}
+
+.active-btn {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.account-btn.active-btn,
+.button-group button.account-btn.active-btn {
+  box-shadow: 0 4px 14px rgba(0, 128, 255, 0.4);
+}
+
+.subaccount-btn.active-btn,
+.button-group button.subaccount-btn.active-btn {
+  box-shadow: 0 4px 14px rgba(255, 128, 0, 0.4);
+}
+
+input {
+  margin-bottom: 10px;
+  padding: 8px;
+  width: 100%;
+}
+
+.grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  flex: 1;
+  min-width: 250px;
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card li strong {
+  color: #000;
+}
+
+h2 {
+  margin-top: 2rem;
+}
+
+#accountTotalsGrid .card {
+  background: #e6f7ff;
+  border-left: 5px solid #1890ff;
+}
+
+#transactionList {
+  margin-bottom: 2rem;
+}
